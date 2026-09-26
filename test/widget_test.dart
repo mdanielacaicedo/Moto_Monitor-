@@ -7,24 +7,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:moto_monitor/main.dart';
+import 'package:moto_monitor/providers/app_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  // 🚀 Prueba básica de widget: Verifica que la app MotoMonitorApp se construye sin errores
+  testWidgets('MotoMonitorApp builds without errors', (WidgetTester tester) async {
+    // 📱 Construye la app con Provider
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (context) => AppProvider(),
+        child: const MotoMonitorApp(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // ⏳ Espera un frame para que se renderice
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // ✅ Verifica que el widget se construyó correctamente
+    expect(find.byType(MotoMonitorApp), findsOneWidget);
+
+    // ✅ Verifica que no hay excepciones sin capturar
+    expect(tester.takeException(), isNull);
   });
 }
