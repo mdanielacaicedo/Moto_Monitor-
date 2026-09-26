@@ -43,3 +43,33 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Local machine files
+local.properties
+**/local.properties
+.gradle/
+android/.gradle/
+
+# IDE
+.vscode/
+.idea/
+
+# Generated plugin registrants and build artifacts
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+
+# Flutter ephemeral
+ios/Flutter/ephemeral/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/
+
+# Keystores and packages
+*.jks
+*.keystore
+
+# Binary artifacts
+*.apk
+*.aab
+
