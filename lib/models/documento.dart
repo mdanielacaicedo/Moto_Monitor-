@@ -1,5 +1,6 @@
 class Documento {
   final String id;
+  final String motoId;
   final String tipo;
   final String numero;
   final DateTime fechaExpedicion;
@@ -10,6 +11,7 @@ class Documento {
 
   const Documento({
     required this.id,
+    required this.motoId,
     required this.tipo,
     required this.numero,
     required this.fechaExpedicion,
@@ -34,6 +36,7 @@ class Documento {
 
   Documento copyWith({
     String? id,
+    String? motoId,
     String? tipo,
     String? numero,
     DateTime? fechaExpedicion,
@@ -44,6 +47,7 @@ class Documento {
   }) {
     return Documento(
       id: id ?? this.id,
+      motoId: motoId ?? this.motoId,
       tipo: tipo ?? this.tipo,
       numero: numero ?? this.numero,
       fechaExpedicion: fechaExpedicion ?? this.fechaExpedicion,
@@ -57,6 +61,7 @@ class Documento {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'motoId': motoId,
       'tipo': tipo,
       'numero': numero,
       'fechaExpedicion': fechaExpedicion.toIso8601String(),
@@ -71,6 +76,7 @@ class Documento {
     try {
       return Documento(
         id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        motoId: json['motoId']?.toString() ?? '',
         tipo: json['tipo']?.toString() ?? 'Documento',
         numero: json['numero']?.toString() ?? '',
         fechaExpedicion: _parseDateTimeSafe(json['fechaExpedicion']) ?? DateTime.now(),
@@ -80,9 +86,9 @@ class Documento {
         activo: json['activo'] as bool? ?? true,
       );
     } catch (e) {
-
       return Documento(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        motoId: '',
         tipo: 'Documento',
         numero: '',
         fechaExpedicion: DateTime.now(),

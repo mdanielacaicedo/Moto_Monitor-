@@ -1,5 +1,6 @@
 class Mantenimiento {
   final String id;
+  final String motoId;
   final DateTime fecha;
   final int kilometraje;
   final String tipo;
@@ -15,6 +16,7 @@ class Mantenimiento {
 
   const Mantenimiento({
     required this.id,
+    required this.motoId,
     required this.fecha,
     required this.kilometraje,
     required this.tipo,
@@ -35,6 +37,7 @@ class Mantenimiento {
 
   Mantenimiento copyWith({
     String? id,
+    String? motoId,
     DateTime? fecha,
     int? kilometraje,
     String? tipo,
@@ -50,6 +53,7 @@ class Mantenimiento {
   }) {
     return Mantenimiento(
       id: id ?? this.id,
+      motoId: motoId ?? this.motoId,
       fecha: fecha ?? this.fecha,
       kilometraje: kilometraje ?? this.kilometraje,
       tipo: tipo ?? this.tipo,
@@ -68,6 +72,7 @@ class Mantenimiento {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'motoId': motoId,
       'fecha': fecha.toIso8601String(),
       'kilometraje': kilometraje,
       'tipo': tipo,
@@ -87,6 +92,7 @@ class Mantenimiento {
     try {
       return Mantenimiento(
         id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        motoId: json['motoId']?.toString() ?? '',
         fecha: _parseDateTimeSafe(json['fecha']) ?? DateTime.now(),
         kilometraje: _parseIntSafe(json['kilometraje']) ?? 0,
         tipo: json['tipo']?.toString() ?? 'Mantenimiento',
@@ -103,6 +109,7 @@ class Mantenimiento {
     } catch (e) {
       return Mantenimiento(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        motoId: '',
         fecha: DateTime.now(),
         kilometraje: 0,
         tipo: 'Mantenimiento',

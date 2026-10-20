@@ -1,4 +1,3 @@
-// lib/screens/add_moto_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/moto.dart';
@@ -60,13 +59,11 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
       return;
     }
 
-    // Simular consulta RUNT con datos de prueba
     await Future.delayed(Duration(seconds: 2));
     
     final placa = _placaController.text.trim().toUpperCase();
     
     if (placa.contains('ABC123')) {
-      // Datos de prueba exitosos
       _marcaController.text = 'Honda';
       _modeloController.text = 'CB 190R';
       _anoController.text = '2023';
@@ -131,7 +128,6 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Mensaje de bienvenida
               if (widget.isFirstMoto) ...[
                 Container(
                   padding: EdgeInsets.all(16),
@@ -156,7 +152,6 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                 SizedBox(height: 24),
               ],
 
-              // Consulta RUNT
               Card(
                 child: Padding(
                   padding: EdgeInsets.all(16),
@@ -219,108 +214,35 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                           ),
                         ],
                       ),
-                      
-                      if (_statusMessage.isNotEmpty) ...[
-                        SizedBox(height: 12),
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: _statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _statusColor.withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _statusColor == Colors.green ? Icons.check_circle :
-                                _statusColor == Colors.red ? Icons.error :
-                                Icons.info,
-                                color: _statusColor,
-                                size: 20,
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _statusMessage,
-                                  style: TextStyle(color: _statusColor.shade700),
-                                ),
-                              ),
-                            ],
-                          ),
+                      SizedBox(height: 20),
+                      TextFormField(
+                        controller: _marcaController,
+                        decoration: InputDecoration(
+                          labelText: 'Marca',
+                          prefixIcon: Icon(Icons.branding_watermark),
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 24),
-
-              // Formulario básico
-              Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.motorcycle, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text(
-                            'Datos de la motocicleta',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
-                            ),
-                          ),
-                        ],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'La marca es requerida';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 16),
-                      
-                      // Marca y Modelo
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _marcaController,
-                              decoration: InputDecoration(
-                                labelText: 'Marca',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'La marca es requerida';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _modeloController,
-                              decoration: InputDecoration(
-                                labelText: 'Modelo',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'El modelo es requerido';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
+                      SizedBox(height: 12),
+                      TextFormField(
+                        controller: _modeloController,
+                        decoration: InputDecoration(
+                          labelText: 'Modelo',
+                          prefixIcon: Icon(Icons.directions_bike),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'El modelo es requerido';
+                          }
+                          return null;
+                        },
                       ),
-                      SizedBox(height: 16),
-                      
-                      // Año y Color
+                      SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -329,17 +251,11 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'Año',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                prefixIcon: Icon(Icons.calendar_today),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'El año es requerido';
-                                }
-                                final ano = int.tryParse(value);
-                                if (ano == null || ano < 1980 || ano > DateTime.now().year + 1) {
-                                  return 'Año inválido';
                                 }
                                 return null;
                               },
@@ -351,23 +267,13 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                               controller: _colorController,
                               decoration: InputDecoration(
                                 labelText: 'Color',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                prefixIcon: Icon(Icons.palette),
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'El color es requerido';
-                                }
-                                return null;
-                              },
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 16),
-                      
-                      // Cilindraje y Kilometraje
+                      SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -375,10 +281,8 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                               controller: _cilindrajeController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                labelText: 'Cilindraje (cc)',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                labelText: 'Cilindraje',
+                                prefixIcon: Icon(Icons.settings),
                               ),
                             ),
                           ),
@@ -388,20 +292,9 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                               controller: _kilometrajeController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                labelText: 'Kilometraje actual',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                labelText: 'Kilometraje',
+                                prefixIcon: Icon(Icons.speed),
                               ),
-                              validator: (value) {
-                                if (value != null && value.isNotEmpty) {
-                                  final km = int.tryParse(value);
-                                  if (km == null || km < 0) {
-                                    return 'Kilometraje inválido';
-                                  }
-                                }
-                                return null;
-                              },
                             ),
                           ),
                         ],
@@ -410,43 +303,32 @@ class _AddMotoScreenState extends State<AddMotoScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 32),
-
-              // Botón guardar
-              ElevatedButton(
+              SizedBox(height: 24),
+              ElevatedButton.icon(
                 onPressed: _isLoading ? null : _saveMoto,
+                icon: _isLoading ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.save),
+                label: Text(_isLoading ? 'Guardando...' : 'Guardar moto'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              if (_statusMessage.isNotEmpty) ...[
+                SizedBox(height: 16),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _statusColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _statusColor.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    _statusMessage,
+                    style: TextStyle(color: _statusColor),
                   ),
                 ),
-                child: _isLoading
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text('Guardando...'),
-                        ],
-                      )
-                    : Text(
-                        'Guardar Motocicleta',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
+              ],
             ],
           ),
         ),

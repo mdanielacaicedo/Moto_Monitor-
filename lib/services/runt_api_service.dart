@@ -39,8 +39,6 @@ class RuntApiService {
 
       final url = Uri.parse('$_baseUrl/vehicle/$cleanPlate');
 
-      print('Consultando vehículo: $cleanPlate');
-
       try {
         final response = await http.get(url, headers: headers)
             .timeout(const Duration(seconds: 10));
@@ -60,8 +58,8 @@ class RuntApiService {
             );
           }
         }
-      } catch (e) {
-        print('API real no disponible, usando datos simulados');
+      } catch (_) {
+        // fallback al servicio simulado si la API real falla
       }
 
       return await MockRuntService().getVehicleByPlate(cleanPlate);
@@ -78,6 +76,7 @@ class RuntApiService {
     try {
       return Moto(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: '',
         placa: plate,
         marca: _parseString(apiData['brand'], 'Desconocida'),
         modelo: _parseString(apiData['model'], 'Desconocido'),
@@ -86,11 +85,10 @@ class RuntApiService {
         fechaCompra: _parseDateTime(apiData['purchase_date']) ?? DateTime.now(),
         fechaUltimaActualizacion: DateTime.now(),
       );
-    } catch (e) {
-      print('Error creando Moto desde API data: $e');
-
+    } catch (_) {
       return Moto(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: '',
         placa: plate,
         marca: 'Consulta API',
         modelo: 'Por completar',
@@ -184,6 +182,7 @@ class MockRuntService {
         message: 'Vehículo encontrado (datos simulados)',
         moto: Moto(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: '',
           placa: cleanPlate,
           marca: 'Honda',
           modelo: 'CB 190R',
@@ -204,6 +203,7 @@ class MockRuntService {
         message: 'Vehículo encontrado (datos simulados)',
         moto: Moto(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: '',
           placa: cleanPlate,
           marca: 'Yamaha',
           modelo: 'FZ 25',

@@ -1,14 +1,14 @@
-// lib/services/auth_service.dart
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../db/database_helper.dart';
 import '../models/user.dart';
 
 class AuthService {
-  static const String _keyCurrentUser = 'current_user';
-  static const String _keyUsers = 'registered_users';
+  static const String _keyCurrentUserId = 'active_user_id';
 
-  // Singleton
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
@@ -18,24 +18,34 @@ class AuthService {
   User? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
 
-  /// Inicializa el servicio y carga el usuario actual si existe
   Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userJson = prefs.getString(_keyCurrentUser);
+      final userId = prefs.getString(_keyCurrentUserId);
+      if (userId == null || userId.isEmpty) {
+        _currentUser = null;
+        return;
+      }
 
-      if (userJson != null) {
-        final userData = jsonDecode(userJson);
-        _currentUser = User.fromJson(userData);
-        print('✅ Usuario cargado: ${_currentUser?.email}');
+      final db = await DatabaseHelper.instance.database;
+      final rows = await db.query(
+        'users',
+        where: 'id = ?',
+        whereArgs: [userId],
+        limit: 1,
+      );
+
+      if (rows.isNotEmpty) {
+        _currentUser = _userFromRow(rows.first);
+      } else {
+        _currentUser = null;
+        await prefs.remove(_keyCurrentUserId);
       }
     } catch (e) {
-      print('❌ Error inicializando AuthService: $e');
       _currentUser = null;
     }
   }
 
-  /// Registra un nuevo usuario
   Future<AuthResult> register({
     required String name,
     required String email,
@@ -43,7 +53,6 @@ class AuthService {
     String? phone,
   }) async {
     try {
-      // Validar entrada
       if (name.trim().isEmpty) {
         return AuthResult(success: false, message: 'El nombre es requerido');
       }
@@ -54,12 +63,10 @@ class AuthService {
         return AuthResult(success: false, message: 'La contraseña debe tener al menos 6 caracteres');
       }
 
-      // Verificar si el usuario ya existe
       if (await _userExists(email)) {
         return AuthResult(success: false, message: 'El email ya está registrado');
       }
 
-      // Crear nuevo usuario
       final user = User(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name.trim(),
@@ -68,10 +75,7 @@ class AuthService {
         createdAt: DateTime.now(),
       );
 
-      // Guardar usuario en la lista de usuarios registrados
       await _saveUser(user, password);
-
-      // Establecer como usuario actual
       await _setCurrentUser(user);
 
       return AuthResult(success: true, message: 'Registro exitoso', user: user);
@@ -80,7 +84,6 @@ class AuthService {
     }
   }
 
-  /// Inicia sesión
   Future<AuthResult> login({
     required String email,
     required String password,
@@ -94,31 +97,27 @@ class AuthService {
       }
 
       final user = await _authenticateUser(email.toLowerCase().trim(), password);
-
       if (user != null) {
         await _setCurrentUser(user);
         return AuthResult(success: true, message: 'Inicio de sesión exitoso', user: user);
-      } else {
-        return AuthResult(success: false, message: 'Email o contraseña incorrectos');
       }
+
+      return AuthResult(success: false, message: 'Email o contraseña incorrectos');
     } catch (e) {
       return AuthResult(success: false, message: 'Error en el inicio de sesión: $e');
     }
   }
 
-  /// Cierra sesión
   Future<void> logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_keyCurrentUser);
+      await prefs.remove(_keyCurrentUserId);
       _currentUser = null;
-      print('✅ Sesión cerrada');
-    } catch (e) {
-      print('❌ Error cerrando sesión: $e');
+    } catch (_) {
+      // no-op: el cierre de sesión ya intentó limpiar la sesión
     }
   }
 
-  /// Actualiza el perfil del usuario actual
   Future<AuthResult> updateProfile({
     String? name,
     String? phone,
@@ -145,7 +144,6 @@ class AuthService {
     }
   }
 
-  /// Elimina la cuenta del usuario actual
   Future<AuthResult> deleteAccount() async {
     try {
       if (_currentUser == null) {
@@ -153,8 +151,8 @@ class AuthService {
       }
 
       final email = _currentUser!.email;
-      await logout();
       await _removeUser(email);
+      await logout();
 
       return AuthResult(success: true, message: 'Cuenta eliminada exitosamente');
     } catch (e) {
@@ -162,24 +160,26 @@ class AuthService {
     }
   }
 
-  // Métodos privados
-
   bool _isValidEmail(String email) {
     return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
   }
 
   String _hashPassword(String password) {
-    var bytes = utf8.encode(password);
-    var digest = sha256.convert(bytes);
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
     return digest.toString();
   }
 
   Future<bool> _userExists(String email) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final usersJson = prefs.getString(_keyUsers) ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-      return users.containsKey(email.toLowerCase());
+      final db = await DatabaseHelper.instance.database;
+      final result = await db.query(
+        'users',
+        where: 'email = ?',
+        whereArgs: [email.toLowerCase().trim()],
+        limit: 1,
+      );
+      return result.isNotEmpty;
     } catch (e) {
       return false;
     }
@@ -187,16 +187,19 @@ class AuthService {
 
   Future<void> _saveUser(User user, String password) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final usersJson = prefs.getString(_keyUsers) ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      users[user.email] = {
-        'user': user.toJson(),
-        'passwordHash': _hashPassword(password),
-      };
-
-      await prefs.setString(_keyUsers, jsonEncode(users));
+      final db = await DatabaseHelper.instance.database;
+      await db.insert(
+        'users',
+        {
+          'id': user.id,
+          'name': user.name,
+          'email': user.email,
+          'phone': user.phone,
+          'passwordHash': _hashPassword(password),
+          'createdAt': user.createdAt.toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.abort,
+      );
     } catch (e) {
       throw Exception('Error guardando usuario: $e');
     }
@@ -204,17 +207,23 @@ class AuthService {
 
   Future<User?> _authenticateUser(String email, String password) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final usersJson = prefs.getString(_keyUsers) ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
+      final db = await DatabaseHelper.instance.database;
+      final rows = await db.query(
+        'users',
+        where: 'email = ?',
+        whereArgs: [email],
+        limit: 1,
+      );
 
-      final userData = users[email];
-      if (userData == null) return null;
+      if (rows.isEmpty) return null;
 
-      final passwordHash = userData['passwordHash'] as String?;
-      if (passwordHash != _hashPassword(password)) return null;
+      final user = _userFromRow(rows.first);
+      final storedHash = rows.first['passwordHash'] as String?;
+      if (storedHash == null || storedHash != _hashPassword(password)) {
+        return null;
+      }
 
-      return User.fromJson(userData['user']);
+      return user;
     } catch (e) {
       return null;
     }
@@ -223,7 +232,7 @@ class AuthService {
   Future<void> _setCurrentUser(User user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_keyCurrentUser, jsonEncode(user.toJson()));
+      await prefs.setString(_keyCurrentUserId, user.id);
       _currentUser = user;
     } catch (e) {
       throw Exception('Error estableciendo usuario actual: $e');
@@ -232,14 +241,18 @@ class AuthService {
 
   Future<void> _updateUserInRegistry(User user) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final usersJson = prefs.getString(_keyUsers) ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      if (users.containsKey(user.email)) {
-        users[user.email]['user'] = user.toJson();
-        await prefs.setString(_keyUsers, jsonEncode(users));
-      }
+      final db = await DatabaseHelper.instance.database;
+      await db.update(
+        'users',
+        {
+          'name': user.name,
+          'email': user.email,
+          'phone': user.phone,
+          'createdAt': user.createdAt.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [user.id],
+      );
     } catch (e) {
       throw Exception('Error actualizando usuario en registro: $e');
     }
@@ -247,15 +260,37 @@ class AuthService {
 
   Future<void> _removeUser(String email) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final usersJson = prefs.getString(_keyUsers) ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      users.remove(email.toLowerCase());
-      await prefs.setString(_keyUsers, jsonEncode(users));
+      final db = await DatabaseHelper.instance.database;
+      await db.delete(
+        'users',
+        where: 'email = ?',
+        whereArgs: [email.toLowerCase()],
+      );
     } catch (e) {
       throw Exception('Error eliminando usuario: $e');
     }
+  }
+
+  User _userFromRow(Map<String, dynamic> row) {
+    return User(
+      id: row['id']?.toString() ?? '',
+      name: row['name']?.toString() ?? 'Usuario',
+      email: row['email']?.toString() ?? '',
+      phone: row['phone']?.toString(),
+      createdAt: _parseDateTime(row['createdAt']) ?? DateTime.now(),
+    );
+  }
+
+  DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 }
 
