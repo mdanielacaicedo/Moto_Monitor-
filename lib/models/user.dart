@@ -1,4 +1,5 @@
-// lib/models/user.dart
+import 'package:flutter/foundation.dart';
+
 class User {
   final String id;
   final String name;
@@ -14,7 +15,6 @@ class User {
     required this.createdAt,
   });
 
-  /// Crea un User desde JSON con validación null-safe
   factory User.fromJson(Map<String, dynamic> json) {
     try {
       return User(
@@ -25,8 +25,7 @@ class User {
         createdAt: _parseDateTime(json['createdAt'], DateTime.now()),
       );
     } catch (e) {
-      print('❌ Error parsing User JSON: $e');
-      // Retorna un usuario por defecto en caso de error
+      debugPrint('Error parsing User JSON: $e');
       return User(
         id: 'user_${DateTime.now().millisecondsSinceEpoch}',
         name: 'Usuario',
@@ -36,7 +35,6 @@ class User {
     }
   }
 
-  /// Convierte el User a JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -47,7 +45,6 @@ class User {
     };
   }
 
-  /// Crea una copia del User con campos modificados
   User copyWith({
     String? id,
     String? name,
@@ -64,7 +61,6 @@ class User {
     );
   }
 
-  /// Obtiene las iniciales del usuario para avatar
   String get initials {
     if (name.isEmpty) return 'U';
     final names = name.trim().split(' ');
@@ -74,7 +70,6 @@ class User {
     return '${names[0][0]}${names[1][0]}'.toUpperCase();
   }
 
-  /// Valida si el usuario tiene información básica completa
   bool get isComplete {
     return name.isNotEmpty && email.isNotEmpty && email.contains('@');
   }
@@ -97,7 +92,6 @@ class User {
     return id.hashCode ^ email.hashCode;
   }
 
-  // Métodos auxiliares para parsing seguro
   static String _parseString(dynamic value, String defaultValue) {
     if (value == null) return defaultValue;
     if (value is String) return value;

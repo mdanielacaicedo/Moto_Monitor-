@@ -1,5 +1,6 @@
 class Recordatorio {
   final String id;
+  final String motoId;
   final String titulo;
   final String descripcion;
   final DateTime fechaCreacion;
@@ -12,6 +13,7 @@ class Recordatorio {
 
   const Recordatorio({
     required this.id,
+    required this.motoId,
     required this.titulo,
     required this.descripcion,
     required this.fechaCreacion,
@@ -39,6 +41,7 @@ class Recordatorio {
 
   Recordatorio copyWith({
     String? id,
+    String? motoId,
     String? titulo,
     String? descripcion,
     DateTime? fechaCreacion,
@@ -51,6 +54,7 @@ class Recordatorio {
   }) {
     return Recordatorio(
       id: id ?? this.id,
+      motoId: motoId ?? this.motoId,
       titulo: titulo ?? this.titulo,
       descripcion: descripcion ?? this.descripcion,
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
@@ -66,6 +70,7 @@ class Recordatorio {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'motoId': motoId,
       'titulo': titulo,
       'descripcion': descripcion,
       'fechaCreacion': fechaCreacion.toIso8601String(),
@@ -82,6 +87,7 @@ class Recordatorio {
     try {
       return Recordatorio(
         id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        motoId: json['motoId']?.toString() ?? '',
         titulo: json['titulo']?.toString() ?? 'Recordatorio',
         descripcion: json['descripcion']?.toString() ?? '',
         fechaCreacion: _parseDateTimeSafe(json['fechaCreacion']) ?? DateTime.now(),
@@ -90,11 +96,12 @@ class Recordatorio {
         prioridad: json['prioridad']?.toString() ?? 'normal',
         completado: json['completado'] as bool? ?? false,
         accion: json['accion']?.toString(),
-        metadata: json['metadata'] as Map<String, dynamic>?,
+        metadata: _parseMetadata(json['metadata']),
       );
     } catch (e) {
       return Recordatorio(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        motoId: '',
         titulo: 'Recordatorio',
         descripcion: 'Error al cargar recordatorio',
         fechaCreacion: DateTime.now(),
@@ -102,6 +109,15 @@ class Recordatorio {
         tipo: 'general',
       );
     }
+  }
+
+  static Map<String, dynamic>? _parseMetadata(dynamic value) {
+    if (value == null) return null;
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, dynamic value) => MapEntry(key.toString(), value));
+    }
+    return null;
   }
 
   static DateTime? _parseDateTimeSafe(dynamic value) {

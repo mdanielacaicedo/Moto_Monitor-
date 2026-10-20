@@ -1,5 +1,6 @@
 class Moto {
   final String id;
+  final String userId;
   final String marca;
   final String modelo;
   final int ano;
@@ -13,6 +14,7 @@ class Moto {
 
   const Moto({
     required this.id,
+    required this.userId,
     required this.marca,
     required this.modelo,
     required this.ano,
@@ -27,6 +29,7 @@ class Moto {
 
   Moto copyWith({
     String? id,
+    String? userId,
     String? marca,
     String? modelo,
     int? ano,
@@ -40,6 +43,7 @@ class Moto {
   }) {
     return Moto(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       marca: marca ?? this.marca,
       modelo: modelo ?? this.modelo,
       ano: ano ?? this.ano,
@@ -56,6 +60,7 @@ class Moto {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
       'marca': marca,
       'modelo': modelo,
       'ano': ano,
@@ -73,6 +78,7 @@ class Moto {
     try {
       return Moto(
         id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: json['userId']?.toString() ?? '',
         marca: json['marca']?.toString() ?? 'Sin configurar',
         modelo: json['modelo']?.toString() ?? 'Sin configurar',
         ano: _parseIntSafe(json['ano']) ?? DateTime.now().year,
@@ -87,6 +93,7 @@ class Moto {
     } catch (e) {
       return Moto(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: '',
         marca: 'Sin configurar',
         modelo: 'Sin configurar',
         ano: DateTime.now().year,
