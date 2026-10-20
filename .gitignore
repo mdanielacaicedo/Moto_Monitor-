@@ -27,11 +27,24 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
+.packages
 .pub-cache/
 .pub/
-/build/
+build/
 /coverage/
+
+# Flutter project cache and generated files
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/.gradle
+*.iml
+.idea/
+.vscode/
+*.log
 
 # Symbolication related
 app.*.symbols
@@ -72,4 +85,3 @@ macos/Flutter/ephemeral/
 # Binary artifacts
 *.apk
 *.aab
-
